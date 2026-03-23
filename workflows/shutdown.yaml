@@ -1,0 +1,35 @@
+name: Shutdown
+on:
+  schedule:
+    - cron: '0 20 * * 5' # Fridays at 8:00 PM UTC
+  workflow_dispatch:
+
+jobs:
+  shutdown:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Snapshot and Destroy
+        run: |
+          TAG="weekend-off"
+          DROPLET_IDS=$(doctl compute droplet list --tag-name $TAG --format ID --no-header)
+
+          if [ -z "$DROPLET_IDS" ]; then
+            echo "No droplets found with tag: $TAG"
+            exit 0
+          fi
+
+          for ID in $DROPLET_IDS; do
+            NAME=$(doctl compute droplet get $ID --format Name --no-header)
+            SNAP_NAME="auto-${NAME}-$(date +%Y-%m-%d)"
+            
+            echo "Step 1: Creating snapshot $SNAP_NAME for $NAME..."
+            doctl compute droplet-action snapshot $ID --snapshot-name "$SNAP_NAME" --wait
+            
+            echo "Step 2: Destroying Droplet $ID..."
+            doctl compute droplet delete $ID --force
+          done
