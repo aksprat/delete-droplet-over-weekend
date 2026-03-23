@@ -1,7 +1,7 @@
 name: Shutdown
 on:
   schedule:
-    - cron: '0 20 * * 5' # Mondays at 8:30 AM UTC
+    - cron: '0 20 * * 5' # Fridays at 8:00 PM UTC
   workflow_dispatch:
 
 jobs:
