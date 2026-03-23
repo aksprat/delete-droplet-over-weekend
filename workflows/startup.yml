@@ -1,0 +1,47 @@
+name: Monday Morning Startup
+on:
+  schedule:
+    - cron: '0 7 * * 1' # Mondays at 7:00 AM UTC
+  workflow_dispatch:
+
+jobs:
+  startup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+
+      - name: Restore from Snapshot
+        run: |
+          # Finds all snapshots starting with 'auto-'
+          SNAPSHOTS=$(doctl compute snapshot list --format ID,Name --no-header | grep "auto-")
+
+          if [ -z "$SNAPSHOTS" ]; then
+            echo "No 'auto-' snapshots found to restore."
+            exit 0
+          fi
+
+          echo "$SNAPSHOTS" | while read -r SNAP_ID SNAP_NAME; do
+            # Extract original name (e.g., 'auto-web-server-2023-10-27' -> 'web-server')
+            ORIGINAL_NAME=$(echo "$SNAP_NAME" | sed 's/^auto-//; s/-[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}$//')
+            
+            echo "Restoring $ORIGINAL_NAME from snapshot $SNAP_ID..."
+            
+            # --- CUSTOMER CONFIGURATION ---
+            REGION="nyc3"        # Change to customer's region
+            SIZE="s-1vcpu-2gb"   # Change to customer's plan
+            TAG="weekend-off"
+            # ------------------------------
+
+            doctl compute droplet create "$ORIGINAL_NAME" \
+              --region "$REGION" \
+              --size "$SIZE" \
+              --image "$SNAP_ID" \
+              --tag-names "$TAG" \
+              --wait
+
+            echo "Success! Deleting the snapshot $SNAP_ID to save storage costs..."
+            doctl compute snapshot delete $SNAP_ID --force
+          done
