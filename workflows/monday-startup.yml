@@ -1,7 +1,7 @@
 name: Monday Morning Startup
 on:
   schedule:
-    - cron: '0 7 * * 1' # Mondays at 7:00 AM UTC
+    - cron: '0 7 * * 1' # Mondays at 10:00 AM UTC
   workflow_dispatch:
 
 jobs:
@@ -30,8 +30,8 @@ jobs:
             echo "Restoring $ORIGINAL_NAME from snapshot $SNAP_ID..."
             
             # --- CUSTOMER CONFIGURATION ---
-            REGION="nyc3"        # Change to customer's region
-            SIZE="s-1vcpu-2gb"   # Change to customer's plan
+            REGION="tor1"        # Change to customer's region
+            SIZE="s-1vcpu-1gb"   # Change to customer's plan
             TAG="weekend-off"
             # ------------------------------
 
