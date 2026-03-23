@@ -17,5 +17,4 @@ This repository automates the process of "pausing" DigitalOcean Droplets over th
 4. **Configure Region/Size**: Edit the `monday-startup.yml` file to match your Droplet's Region and Size.
 
 ## Important Notes
-- **IP Address**: Since Droplets are destroyed, the IP address will change. We recommend using a **DigitalOcean Reserved IP** and updating your DNS to point to that.
 - **Data**: All data on the main disk is saved in the snapshot.
