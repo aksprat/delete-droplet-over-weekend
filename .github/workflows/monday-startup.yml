@@ -15,33 +15,33 @@ jobs:
 
       - name: Restore from Snapshot
         run: |
-          # Finds all snapshots starting with 'auto-'
+          # Find snapshots created by our script
           SNAPSHOTS=$(doctl compute snapshot list --format ID,Name --no-header | grep "auto-")
 
           if [ -z "$SNAPSHOTS" ]; then
-            echo "No 'auto-' snapshots found to restore."
+            echo "No 'auto-' snapshots found."
             exit 0
           fi
 
           echo "$SNAPSHOTS" | while read -r SNAP_ID SNAP_NAME; do
-            # Extract original name (e.g., 'auto-web-server-2023-10-27' -> 'web-server')
-            ORIGINAL_NAME=$(echo "$SNAP_NAME" | sed 's/^auto-//; s/-[0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}$//')
-            
-            echo "Restoring $ORIGINAL_NAME from snapshot $SNAP_ID..."
-            
-            # --- CUSTOMER CONFIGURATION ---
-            REGION="tor1"        # Change to customer's region
-            SIZE="s-1vcpu-1gb"   # Change to customer's plan
-            TAG="weekend-off"
-            # ------------------------------
+            echo "Processing Snapshot: $SNAP_NAME"
+
+            # Parse the name back into variables
+            # auto-webserver-s-1vcpu-2gb-nyc3-20231027
+            # We use 'rev' and 'cut' to handle names that might have dashes in them
+            ORIGINAL_NAME=$(echo "$SNAP_NAME" | cut -d'-' -f2)
+            SIZE=$(echo "$SNAP_NAME" | rev | cut -d'-' -f3,4,5 | rev)
+            REGION=$(echo "$SNAP_NAME" | rev | cut -d'-' -f2 | rev)
+
+            echo "Restoring $ORIGINAL_NAME with size $SIZE in $REGION..."
 
             doctl compute droplet create "$ORIGINAL_NAME" \
               --region "$REGION" \
               --size "$SIZE" \
               --image "$SNAP_ID" \
-              --tag-names "$TAG" \
+              --tag-names "weekend-off" \
               --wait
 
-            echo "Success! Deleting the snapshot $SNAP_ID to save storage costs..."
+            echo "Droplet restored. Deleting snapshot $SNAP_ID..."
             doctl compute snapshot delete $SNAP_ID --force
           done
