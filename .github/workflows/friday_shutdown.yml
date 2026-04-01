@@ -1,4 +1,4 @@
-name: Shutdown
+name: Friday Night Shutdown
 on:
   schedule:
     - cron: '0 20 * * 5' # Fridays at 8:00 PM UTC
@@ -24,12 +24,17 @@ jobs:
           fi
 
           for ID in $DROPLET_IDS; do
+            # Fetch details
             NAME=$(doctl compute droplet get $ID --format Name --no-header)
-            SNAP_NAME="auto-${NAME}-$(date +%Y-%m-%d)"
+            SIZE=$(doctl compute droplet get $ID --format Size --no-header)
+            REGION=$(doctl compute droplet get $ID --format Region --no-header)
             
-            echo "Step 1: Creating snapshot $SNAP_NAME for $NAME..."
+            # Format: auto-[NAME]-[SIZE]-[REGION]-[DATE]
+            SNAP_NAME="auto-${NAME}-${SIZE}-${REGION}-$(date +%Y%m%d)"
+            
+            echo "Creating snapshot $SNAP_NAME for $NAME ($SIZE in $REGION)..."
             doctl compute droplet-action snapshot $ID --snapshot-name "$SNAP_NAME" --wait
             
-            echo "Step 2: Destroying Droplet $ID..."
+            echo "Destroying Droplet $ID..."
             doctl compute droplet delete $ID --force
           done
