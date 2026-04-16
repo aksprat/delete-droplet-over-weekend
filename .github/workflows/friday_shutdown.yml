@@ -26,7 +26,7 @@ jobs:
           for ID in $DROPLET_IDS; do
             # Fetch details
             NAME=$(doctl compute droplet get $ID --format Name --no-header)
-            SIZE=$(doctl compute droplet get $ID --format Size --no-header)
+            SIZE=$(doctl compute droplet get $ID --format SizeSlug --no-header)
             REGION=$(doctl compute droplet get $ID --format Region --no-header)
             
             # Format: auto-[NAME]-[SIZE]-[REGION]-[DATE]
