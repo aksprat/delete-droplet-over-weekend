@@ -28,10 +28,13 @@ jobs:
 
             # Parse the name back into variables
             # auto-webserver-s-1vcpu-2gb-nyc3-20231027
-            # We use 'rev' and 'cut' to handle names that might have dashes in them
-            ORIGINAL_NAME=$(echo "$SNAP_NAME" | cut -d'-' -f2)
-            SIZE=$(echo "$SNAP_NAME" | rev | cut -d'-' -f3,4,5 | rev)
+            # DATE and REGION are fixed positions from the end (no dashes in either)
+            # SIZE slug is the 3 fields before REGION (e.g. s-1vcpu-2gb)
+            # NAME is everything that remains after stripping the auto- prefix and -SIZE-REGION-DATE suffix
+            DATE=$(echo "$SNAP_NAME" | rev | cut -d'-' -f1 | rev)
             REGION=$(echo "$SNAP_NAME" | rev | cut -d'-' -f2 | rev)
+            SIZE=$(echo "$SNAP_NAME" | rev | cut -d'-' -f3-5 | rev)
+            ORIGINAL_NAME=$(echo "$SNAP_NAME" | rev | cut -d'-' -f6- | rev | sed 's/^auto-//')
 
             echo "Restoring $ORIGINAL_NAME with size $SIZE in $REGION..."
 
